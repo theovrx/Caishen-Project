@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "kanji_struct.c"
 
 #define WINWIDTH 640
 #define WINHEIGHT 480
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]) {
     SDL_Texture * text = SDL_CreateTextureFromSurface(renderer,
         optsrf);
     SDL_FreeSurface(leclerc);
-    Kanji[16] *on_screen_kanji = NULL;
+    struct Kanji *on_screen_kanji[16];
 
     // Game loop
     int running = 1;
