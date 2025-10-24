@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    TTF_Font* customFont = TTF_OpenFont("./Fonts/I_HATE_COMIC_SANS.TTF", 4);
+    TTF_Font* customFont = TTF_OpenFont("./Fonts/SimSun.ttf", 4);
     int resolution = 4;
     int timer = 0;
     if (!customFont) {
@@ -61,13 +61,14 @@ int main(int argc, char* argv[]) {
     }
 
     SDL_Color White = {255, 255, 255};
+    SDL_Rect Message_rect = {0, 0, 600, 150};
     int quit = 0;
     SDL_Event event;
 
     while (!quit) {
-        SDL_Surface* surfaceMessage = TTF_RenderText_Solid(customFont, "Hello World!", White); 
+        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(customFont, "你好世界他她它", White); 
         if (!surfaceMessage) {
-            printf("Erreur TTF_RenderText_Solid: %s\n", TTF_GetError());
+            printf("Erreur TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
             break;
         }
 
@@ -82,7 +83,6 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
         SDL_RenderClear(renderer);
 
-        SDL_Rect Message_rect = {0, 0, 600, 150};
         SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
         SDL_RenderPresent(renderer);
 
@@ -96,8 +96,9 @@ int main(int argc, char* argv[]) {
         if (resolution < 512){
             if(timer == 6){
                 resolution++;
-                customFont = TTF_OpenFont("./Fonts/I_HATE_COMIC_SANS.TTF", resolution);
+                customFont = TTF_OpenFont("./Fonts/SimSun.ttf", resolution);
                 timer = 0;
+                Message_rect.y += 5;
             }
             else{
                 timer++;
