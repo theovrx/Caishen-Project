@@ -1,8 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <stdio.h>
-#include <stdbool.h>
-
+#if !defined(KANJI_STRUCT_C)
+#define KANJI_STRUCT_C
 struct Kanji
 {
     int fall_speed;
@@ -10,3 +9,4 @@ struct Kanji
     SDL_Rect *rect;
     
 };
+#endif
