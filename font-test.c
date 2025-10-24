@@ -4,6 +4,18 @@
 #include <stdio.h>
 #include "kanji_struct.h"
 
+int resize_kanji(struct Kanji kanji, int font_size, TTF_Font* font) {
+    if (TTF_SizeUTF8(font, kanji.character, &kanji.rect->w, &kanji.rect->h)){
+        printf("Erreur TTF_SizeUTF8: %s\n", TTF_GetError());
+        return -1;
+    }
+    printf("Width: %d, Height: %d\n", kanji.rect->w, kanji.rect->h);
+    kanji.rect->h *= font_size;
+    kanji.rect->w *= font_size;
+    printf("Width: %d, Height: %d\n", kanji.rect->w, kanji.rect->h);
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
 
     struct my_struct
@@ -63,7 +75,8 @@ int main(int argc, char* argv[]) {
 
     SDL_Color White = {255, 255, 255};
     SDL_Rect Message_rect = {0, 0, 600, 150};
-    struct Kanji kanji = {5, u8"你", NULL, &Message_rect};
+    struct Kanji kanji = {5, "你", NULL, &Message_rect};
+    resize_kanji(kanji, 12, customFont);
     int quit = 0;
     SDL_Event event;
 
