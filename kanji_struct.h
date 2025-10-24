@@ -5,6 +5,7 @@
 struct Kanji
 {
     int fall_speed;
+    char character[5];
     SDL_Texture *texture;
     SDL_Rect *rect;
     

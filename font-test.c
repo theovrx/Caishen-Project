@@ -2,6 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include "kanji_struct.h"
 
 int main(int argc, char* argv[]) {
 
@@ -62,11 +63,12 @@ int main(int argc, char* argv[]) {
 
     SDL_Color White = {255, 255, 255};
     SDL_Rect Message_rect = {0, 0, 600, 150};
+    struct Kanji kanji = {5, u8"你", NULL, &Message_rect};
     int quit = 0;
     SDL_Event event;
 
     while (!quit) {
-        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(customFont, "你好世界他她它", White); 
+        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(customFont, kanji.character, White); 
         if (!surfaceMessage) {
             printf("Erreur TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
             break;
