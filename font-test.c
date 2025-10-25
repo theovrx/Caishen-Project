@@ -55,6 +55,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    IMG_Init(IMG_INIT_PNG);
+    SDL_Surface* icon = IMG_Load("./Assets/temple.png"); //TODO: Find license-free icon
+    SDL_SetWindowIcon(window, icon);
+    SDL_FreeSurface(icon);
+
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         printf("Erreur SDL_CreateRenderer: %s\n", SDL_GetError());
@@ -66,7 +71,7 @@ int main(int argc, char* argv[]) {
 
     int timer = 0;
     SDL_Color White = {255, 255, 255};
-    Hanzi hanzi = createHanzi("你", "./Fonts/SimSun.ttf", 80, 512, White, 2);
+    Hanzi hanzi = createHanzi("语", "./Fonts/SimSun.ttf", 80, 512, White, 2);
     int quit = 0;
     SDL_Event event;
 
