@@ -20,7 +20,7 @@ Hanzi createHanzi(char character[5], char fontPath[], int fontSize, int resoluti
     hanzi.rect = malloc(sizeof(SDL_Rect));
     strcpy(hanzi.character, character);
     resizeHanzi(hanzi, fontSize, font);
-    TTF_OpenFont("./Fonts/SimSun.ttf", hanzi.resolution);
+    hanzi.font = TTF_OpenFont(fontPath, hanzi.resolution);
     return hanzi;
 }
 
@@ -66,12 +66,12 @@ int main(int argc, char* argv[]) {
 
     int timer = 0;
     SDL_Color White = {255, 255, 255};
-    Hanzi hanzi = createHanzi("你", "./Fonts/SimSun.ttf", 80, 4, White, 10);
+    Hanzi hanzi = createHanzi("你", "./Fonts/SimSun.ttf", 80, 512, White, 2);
     int quit = 0;
     SDL_Event event;
 
     while (!quit) {
-        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(hanzi.font, hanzi.character, hanzi.color); //TODO: Implement draw
+        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(hanzi.font, hanzi.character, hanzi.color); //TODO: Implement drawHanzi
         if (!surfaceMessage) {
             printf("Erreur TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
             break;
