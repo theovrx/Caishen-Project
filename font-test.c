@@ -24,6 +24,28 @@ Hanzi createHanzi(char character[5], char fontPath[], int fontSize, int resoluti
     return hanzi;
 }
 
+int drawHanzi(Hanzi hanzi, SDL_Renderer* renderer){
+    SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(hanzi.font, hanzi.character, hanzi.color); //TODO: Implement drawHanzi
+    if (!surfaceMessage) {
+        printf("Erreur TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
+        return 1;
+    }
+
+    hanzi.texture = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+    SDL_FreeSurface(surfaceMessage); 
+
+    if (!hanzi.texture) {
+        printf("Erreur SDL_CreateTextureFromSurface: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    SDL_RenderCopy(renderer, hanzi.texture, NULL, hanzi.rect);
+
+    SDL_DestroyTexture(hanzi.texture); 
+
+    return 0;
+}
+
 //TODO: Implement freeHanzi
 
 int main(int argc, char* argv[]) {
@@ -71,32 +93,27 @@ int main(int argc, char* argv[]) {
 
     int timer = 0;
     SDL_Color White = {255, 255, 255};
+    Hanzi hanzi_array[16];
     Hanzi hanzi = createHanzi("语", "./Fonts/SimSun.ttf", 80, 512, White, 2);
+
+    hanzi_array[0] = hanzi;
+
     int quit = 0;
     SDL_Event event;
 
     while (!quit) {
-        SDL_Surface* surfaceMessage = TTF_RenderUTF8_Solid(hanzi.font, hanzi.character, hanzi.color); //TODO: Implement drawHanzi
-        if (!surfaceMessage) {
-            printf("Erreur TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
-            break;
-        }
-
-        hanzi.texture = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
-        SDL_FreeSurface(surfaceMessage); 
-
-        if (!hanzi.texture) {
-            printf("Erreur SDL_CreateTextureFromSurface: %s\n", SDL_GetError());
-            break;
-        }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
         SDL_RenderClear(renderer);
 
-        SDL_RenderCopy(renderer, hanzi.texture, NULL, hanzi.rect);
-        SDL_RenderPresent(renderer);
+        for (int i = 0; i < 16; i++){
+            
+            if (drawHanzi(hanzi_array[i], renderer) == 1){
+                break;
+            }
+        }
 
-        SDL_DestroyTexture(hanzi.texture); 
+        SDL_RenderPresent(renderer);
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -118,6 +135,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Cleanup
+    
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
