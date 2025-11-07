@@ -2,7 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "kanji_struct.h"
+#include "hanzi_struct.h"
 
 #define WINWIDTH 640
 #define WINHEIGHT 480
