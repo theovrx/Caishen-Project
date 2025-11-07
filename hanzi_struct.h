@@ -1,7 +1,9 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #if !defined(HANZI_STRUCT_C)
 #define HANZI_STRUCT_C
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 typedef struct Hanzi{
     char character[5];
     TTF_Font* font;

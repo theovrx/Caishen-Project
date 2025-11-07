@@ -14,13 +14,19 @@ int resizeHanzi(Hanzi hanzi, int fontSize, TTF_Font* font) {
     return 0;
 }
 
-Hanzi createHanzi(char character[5], char fontPath[], int fontSize, int resolution, SDL_Color color, int fallSpeed) {
+Hanzi* createHanzi(char character[5], char fontPath[], int fontSize, int resolution, SDL_Color color, int x, int y, int fallSpeed) {
     TTF_Font* font = TTF_OpenFont(fontPath, 4);
-    Hanzi hanzi = {"", font, fontSize, resolution, color, NULL, NULL, fallSpeed};
-    hanzi.rect = malloc(sizeof(SDL_Rect));
-    strcpy(hanzi.character, character);
-    resizeHanzi(hanzi, fontSize, font);
-    hanzi.font = TTF_OpenFont(fontPath, hanzi.resolution);
+    Hanzi *hanzi = malloc(sizeof(Hanzi));
+    strcpy(hanzi->character, character);
+    hanzi->fontSize = fontSize;
+    hanzi->resolution = resolution;
+    hanzi->color = color;
+    hanzi->fallSpeed = fallSpeed;
+    hanzi->rect = malloc(sizeof(SDL_Rect));
+    hanzi->rect->x = x;
+    hanzi->rect->y = y;
+    resizeHanzi(*hanzi, fontSize, font);
+    hanzi->font = TTF_OpenFont(fontPath, hanzi->resolution);
     return hanzi;
 }
 
@@ -93,10 +99,40 @@ int main(int argc, char* argv[]) {
 
     int timer = 0;
     SDL_Color White = {255, 255, 255};
-    Hanzi hanzi_array[16];
-    Hanzi hanzi = createHanzi("语", "./Fonts/SimSun.ttf", 80, 512, White, 2);
+    SDL_Color Grey = {200, 200, 200};
+    SDL_Color Black = {0, 0, 0};
+    SDL_Color Red = {255, 0, 0};
 
-    hanzi_array[0] = hanzi;
+    Hanzi *hanzi_array[16] = {0};
+
+    SDL_Color colors[16] = {
+        {255, 255, 255}, // White
+        {255, 0, 0},     // Red
+        {0, 255, 0},     // Green
+        {0, 0, 255},     // Blue
+        {255, 255, 0},   // Yellow
+        {0, 255, 255},   // Cyan
+        {255, 0, 255},   // Magenta
+        {255, 165, 0},   // Orange
+        {128, 0, 128},   // Purple
+        {255, 192, 203}, // Pink
+        {139, 69, 19},   // Brown
+        {128, 128, 128}, // Gray
+        {173, 216, 230}, // LightBlue
+        {50, 205, 50},   // Lime
+        {255, 215, 0},   // Gold
+        {238, 130, 238}  // Violet
+    };
+
+    char *characters[16] = {
+        "语", "文", "学", "中", "国", "汉", "字", "龙",
+        "凤", "天", "地", "人", "和", "爱", "梦", "海"
+    };
+
+    for (int i = 0; i < 16; i++){
+        Hanzi *hanzi = createHanzi(characters[i], "./Fonts/SimSun.ttf", 10, i, colors[i], i*50, 0, i+1);
+        hanzi_array[i] = hanzi;
+    }
 
     int quit = 0;
     SDL_Event event;
@@ -107,8 +143,12 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         for (int i = 0; i < 16; i++){
+
+            if(hanzi_array[i] == NULL){
+                continue;
+            }
             
-            if (drawHanzi(hanzi_array[i], renderer) == 1){
+            if (drawHanzi(*hanzi_array[i], renderer) == 1){
                 break;
             }
         }
@@ -120,18 +160,23 @@ int main(int argc, char* argv[]) {
                 quit = 1; 
             }
         }
-        if (hanzi.resolution < 512){
-            if(timer == 6){
-                hanzi.resolution += 10;
-                hanzi.font = TTF_OpenFont("./Fonts/SimSun.ttf", hanzi.resolution);
-                timer = 0;
+        for (int i = 0; i < 16; i++){
+            if(hanzi_array[i] == NULL){
+                continue;
             }
-            else{
-                timer++;
+            if (i[hanzi_array]->resolution < 512){
+                if(timer == 6){
+                    i[hanzi_array]->resolution += 2;
+                    i[hanzi_array]->font = TTF_OpenFont("./Fonts/SimSun.ttf", i[hanzi_array]->resolution);
+                    timer = 0;
+                }
+                else{
+                    timer++;
+                }
             }
+            i[hanzi_array]->rect->y += i[hanzi_array]->fallSpeed*1;
         }
-        hanzi.rect->y += hanzi.fallSpeed;
-        SDL_Delay(16);
+        SDL_Delay(32);
     }
 
     // Cleanup
