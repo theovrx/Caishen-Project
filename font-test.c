@@ -2,6 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include <time.h>
 #include "hanzi_struct.h"
 
 int resizeHanzi(Hanzi hanzi, int fontSize, TTF_Font* font) {
@@ -26,6 +27,7 @@ Hanzi* createHanzi(char character[5], char fontPath[], int fontSize, int resolut
     hanzi->rect->x = x;
     hanzi->rect->y = y;
     resizeHanzi(*hanzi, fontSize, font);
+    TTF_CloseFont(hanzi->font);
     hanzi->font = TTF_OpenFont(fontPath, hanzi->resolution);
     return hanzi;
 }
@@ -49,6 +51,13 @@ int drawHanzi(Hanzi hanzi, SDL_Renderer* renderer){
 
     SDL_DestroyTexture(hanzi.texture); 
 
+    return 0;
+}
+
+int freeHanzi(Hanzi* hanzi){
+    TTF_CloseFont(hanzi->font);
+    free(hanzi->rect);
+    free(hanzi);
     return 0;
 }
 
@@ -130,7 +139,7 @@ int main(int argc, char* argv[]) {
     };
 
     for (int i = 0; i < 16; i++){
-        Hanzi *hanzi = createHanzi(characters[i], "./Fonts/SimSun.ttf", 10, i, colors[i], i*50, 0, i+1);
+        Hanzi *hanzi = createHanzi(characters[i], "./Fonts/SimSun.ttf", 10, i, colors[i], i*50, 0, (i+1)*2);
         hanzi_array[i] = hanzi;
     }
 
@@ -167,6 +176,7 @@ int main(int argc, char* argv[]) {
             if (i[hanzi_array]->resolution < 512){
                 if(timer == 6){
                     i[hanzi_array]->resolution += 2;
+                    TTF_CloseFont(i[hanzi_array]->font);
                     i[hanzi_array]->font = TTF_OpenFont("./Fonts/SimSun.ttf", i[hanzi_array]->resolution);
                     timer = 0;
                 }
@@ -174,13 +184,21 @@ int main(int argc, char* argv[]) {
                     timer++;
                 }
             }
+            if (i[hanzi_array]->rect->y > 600 - i[hanzi_array]->rect->w || i[hanzi_array]->rect->y < 0){
+                i[hanzi_array]->fallSpeed *= -1;
+            }
+            
             i[hanzi_array]->rect->y += i[hanzi_array]->fallSpeed*1;
         }
-        SDL_Delay(32);
+        SDL_Delay(16);
     }
 
     // Cleanup
-    
+    for (int i = 0; i < 16; i++){
+        if(hanzi_array[i] != NULL){
+            freeHanzi(hanzi_array[i]);
+        }
+    } 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
