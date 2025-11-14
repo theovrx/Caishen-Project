@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <time.h>
 #include "hanzi_struct.h"
@@ -61,12 +62,15 @@ int freeHanzi(Hanzi* hanzi){
     return 0;
 }
 
-//TODO: Implement freeHanzi
-
 int main(int argc, char* argv[]) {
     
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         printf("Erreur SDL_Init: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 ){
+        printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
         return 1;
     }
 
@@ -76,12 +80,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    int WINWIDTH = 800;
+    int WINHEIGHT = 600;
+
     SDL_Window* window = SDL_CreateWindow(
         "Caishen Project", 
         SDL_WINDOWPOS_CENTERED,       
         SDL_WINDOWPOS_CENTERED,
-        800,                          
-        600,                          
+        WINWIDTH,                          
+        WINHEIGHT,                          
         SDL_WINDOW_SHOWN              
     );
 
@@ -92,10 +99,20 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    IMG_Init(IMG_INIT_PNG);
+    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
     SDL_Surface* icon = IMG_Load("./Assets/temple.png"); //TODO: Find license-free icon
     SDL_SetWindowIcon(window, icon);
     SDL_FreeSurface(icon);
+
+    Mix_Chunk *gBell = Mix_LoadWAV("./Sounds/bell.wav");
+    Mix_VolumeChunk(gBell, 32);
+    Mix_Music *gMusic = Mix_LoadMUS("./Sounds/bgMusic.wav");
+    if (gMusic == NULL) {
+        printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
+    }
+    
+    Mix_PlayMusic( gMusic, -1 );
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
@@ -105,6 +122,9 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+
+    SDL_Surface *backgroundIMG = IMG_Load("./Assets/background2.jpg");
+    SDL_Texture *backgroundTexture = SDL_CreateTextureFromSurface(renderer, backgroundIMG);
 
     int timer = 0;
     SDL_Color White = {255, 255, 255};
@@ -139,17 +159,29 @@ int main(int argc, char* argv[]) {
     };
 
     for (int i = 0; i < 16; i++){
-        Hanzi *hanzi = createHanzi(characters[i], "./Fonts/SimSun.ttf", 10, i, colors[i], i*50, 0, (i+1)*2);
+        Hanzi *hanzi = createHanzi(characters[i], "./Fonts/SimSun.ttf", 10, i, colors[i], i*50, 0, (i+1));
         hanzi_array[i] = hanzi;
     }
+
+    TTF_Font *latinFont = TTF_OpenFont("./Fonts/WorkSans-Black.ttf", 256);
+    SDL_Rect textRect;
+    TTF_SizeText(latinFont, "Caishen Project", &textRect.w, &textRect.h);
+    textRect.x = (WINWIDTH - textRect.w) / 2;
+    textRect.y = (WINHEIGHT - textRect.h) / 2 + 20;
 
     int quit = 0;
     SDL_Event event;
 
     while (!quit) {
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
         SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+
+        SDL_Surface *text = TTF_RenderText_Solid(latinFont, "Caishen Project", colors[9]);
+        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, text);
+        SDL_FreeSurface(text);
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+        SDL_DestroyTexture(textTexture);
 
         for (int i = 0; i < 16; i++){
 
@@ -186,9 +218,19 @@ int main(int argc, char* argv[]) {
             }
             if (i[hanzi_array]->rect->y > 600 - i[hanzi_array]->rect->w || i[hanzi_array]->rect->y < 0){
                 i[hanzi_array]->fallSpeed *= -1;
+                if (Mix_Playing(0)) {
+                    Mix_HaltChannel(0);
+                }
+                Mix_PlayChannel(-1, gBell, 0);
             }
             
             i[hanzi_array]->rect->y += i[hanzi_array]->fallSpeed*1;
+        }
+        if (textRect.h > 50){
+            textRect.w *= 0.99;
+            textRect.h *= 0.99;
+            textRect.x = (WINWIDTH - textRect.w) / 2;
+            textRect.y = (WINHEIGHT - textRect.h) / 2+20;
         }
         SDL_Delay(16);
     }
@@ -199,6 +241,8 @@ int main(int argc, char* argv[]) {
             freeHanzi(hanzi_array[i]);
         }
     } 
+    Mix_FreeChunk(gBell);
+    Mix_FreeMusic(gMusic);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
