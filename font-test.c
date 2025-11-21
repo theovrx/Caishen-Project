@@ -5,6 +5,18 @@
 #include <stdio.h>
 #include <time.h>
 #include "hanzi_struct.h"
+#include <limits.h>
+
+int resizeText(SDL_Rect* rect, char text[], int fontSize, int resolution, TTF_Font* font) {
+    if (TTF_SizeText(font, text, &rect->w, &rect->h)){
+        printf("Erreur TTF_SizeText: %s\n", TTF_GetError());
+        return -1;
+    }
+    float scaleFactor = ((float)fontSize*4)/(float)resolution;
+    rect->h *= scaleFactor;
+    rect->w *= scaleFactor;
+    return 0;
+}
 
 int resizeHanzi(Hanzi hanzi, int fontSize, TTF_Font* font) {
     if (TTF_SizeUTF8(font, hanzi.character, &hanzi.rect->w, &hanzi.rect->h)){
@@ -106,13 +118,13 @@ int main(int argc, char* argv[]) {
     SDL_FreeSurface(icon);
 
     Mix_Chunk *gBell = Mix_LoadWAV("./Sounds/bell.wav");
-    Mix_VolumeChunk(gBell, 32);
+    Mix_VolumeChunk(gBell, 0); //32
     Mix_Music *gMusic = Mix_LoadMUS("./Sounds/bgMusic.wav");
     if (gMusic == NULL) {
         printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
     }
     
-    Mix_PlayMusic( gMusic, -1 );
+    //Mix_PlayMusic( gMusic, -1 );
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
@@ -164,10 +176,12 @@ int main(int argc, char* argv[]) {
     }
 
     TTF_Font *latinFont = TTF_OpenFont("./Fonts/WorkSans-Black.ttf", 256);
-    SDL_Rect textRect;
-    TTF_SizeText(latinFont, "Caishen Project", &textRect.w, &textRect.h);
-    textRect.x = (WINWIDTH - textRect.w) / 2;
-    textRect.y = (WINHEIGHT - textRect.h) / 2 + 20;
+    SDL_Rect subtextRect;
+    resizeText(&subtextRect, "Press any button", 8, 256, latinFont);
+    subtextRect.x = (WINWIDTH - subtextRect.w) / 2;
+    subtextRect.y = (WINHEIGHT - subtextRect.h) / 2 + 30;
+    SDL_Rect titleRect;
+    TTF_SizeText(latinFont, "Caishen Project", &titleRect.w, &titleRect.h);
 
     int quit = 0;
     SDL_Event event;
@@ -177,11 +191,14 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
 
-        SDL_Surface *text = TTF_RenderText_Solid(latinFont, "Caishen Project", colors[9]);
-        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, text);
-        SDL_FreeSurface(text);
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-        SDL_DestroyTexture(textTexture);
+        SDL_Surface *title = TTF_RenderText_Solid(latinFont, "Caishen Project", colors[9]);
+        SDL_Texture *titleTexture = SDL_CreateTextureFromSurface(renderer, title);
+        SDL_FreeSurface(title);
+        SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+        SDL_DestroyTexture(titleTexture);
+        SDL_Surface *subtext = TTF_RenderText_Solid(latinFont, "Press any button", colors[9]);
+        SDL_Texture *subtextTexture = SDL_CreateTextureFromSurface(renderer, subtext);
+        SDL_FreeSurface(subtext);
 
         for (int i = 0; i < 16; i++){
 
@@ -194,26 +211,21 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        SDL_RenderPresent(renderer);
-
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+            if (event.type == SDL_QUIT){
                 quit = 1; 
             }
         }
+
         for (int i = 0; i < 16; i++){
             if(hanzi_array[i] == NULL){
                 continue;
             }
             if (i[hanzi_array]->resolution < 512){
-                if(timer == 6){
+                if(timer%6 == 0){
                     i[hanzi_array]->resolution += 2;
                     TTF_CloseFont(i[hanzi_array]->font);
                     i[hanzi_array]->font = TTF_OpenFont("./Fonts/SimSun.ttf", i[hanzi_array]->resolution);
-                    timer = 0;
-                }
-                else{
-                    timer++;
                 }
             }
             if (i[hanzi_array]->rect->y > 600 - i[hanzi_array]->rect->w || i[hanzi_array]->rect->y < 0){
@@ -226,13 +238,25 @@ int main(int argc, char* argv[]) {
             
             i[hanzi_array]->rect->y += i[hanzi_array]->fallSpeed*1;
         }
-        if (textRect.h > 50){
-            textRect.w *= 0.99;
-            textRect.h *= 0.99;
-            textRect.x = (WINWIDTH - textRect.w) / 2;
-            textRect.y = (WINHEIGHT - textRect.h) / 2+20;
+        if (titleRect.h > 50){
+            titleRect.w *= 0.99;
+            titleRect.h *= 0.99;
+            titleRect.x = (WINWIDTH - titleRect.w) / 2;
+            titleRect.y = (WINHEIGHT - titleRect.h) / 2-30;
+        }
+        else{
+            if ((int)((float)timer/10.0)%2 == 0){
+                SDL_RenderCopy(renderer, subtextTexture, NULL, &subtextRect);
+                SDL_DestroyTexture(subtextTexture);
+            }
         }
         SDL_Delay(16);
+        SDL_RenderPresent(renderer);
+        
+        if (timer == INT_MAX - 1){
+            timer = 0;
+        }
+        timer++;
     }
 
     // Cleanup
